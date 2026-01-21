@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Nozima | Infinity Love</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@200;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .romantic-text {
+            font-family: 'Great Vibes', cursive;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 80px rgba(255, 0, 64, 0.15);
+        }
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        .btn-glow {
+            box-shadow: 0 0 20px rgba(255, 0, 64, 0.5);
+            transition: 0.4s all ease;
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 40px rgba(255, 0, 64, 0.8);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <canvas id="canvas3d"></canvas>
+
+    <div id="main-ui" class="glass-panel p-12 rounded-[50px] text-center max-w-lg w-[90%] z-10 scale-95 opacity-0 transition-all duration-1000">
+        
+        <div id="step1">
+            <h1 class="romantic-text text-7xl text-white mb-4 drop-shadow-2xl">Secret portal</h1>
+            <p class="text-red-500 tracking-[0.3em] uppercase text-[10px] mb-10 font-bold">Only for registered users</p>
+            <input type="text" id="nameInput" placeholder="Enter Secret Name..." 
+                class="w-full bg-transparent border-b border-gray-700 focus:border-red-600 text-white text-center py-4 outline-none transition-all text-2xl mb-10 font-light">
+            <button onclick="unlock()" class="btn-glow bg-red-600 text-white px-12 py-4 rounded-full font-bold uppercase tracking-widest text-xs">
+                Unlock Experience
+            </button>
+        </div>
+
+        <div id="step2" class="hidden">
+            <h1 id="questionTitle" class="romantic-text text-7xl text-white mb-12">Do You Love Me?</h1>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-6 min-h-[150px]">
+                <button id="yesBtn" onclick="onYes()" 
+                    class="btn-glow bg-white text-black px-14 py-5 rounded-2xl font-black text-xl z-50">
+                    YES
+                </button>
+                <button id="noBtn" onclick="onNo()" 
+                    class="border border-white/20 text-white/40 px-10 py-4 rounded-2xl hover:bg-white/5 transition-all">
+                    NO
+                </button>
+            </div>
+        </div>
+
+        <div id="step3" class="hidden animate-pulse">
+            <h1 class="romantic-text text-8xl text-red-500 mb-6">I Love You Too! ❤️</h1>
+            <p class="text-white text-lg font-extralight tracking-[0.5em] uppercase">This for you😁</p>
+            <div class="mt-10 flex justify-center gap-4 text-5xl">
+                <span>🌹</span>
+            </div>
+        </div>
+
+        <div id="step-error" class="hidden">
+            <h1 class="text-2xl text-white/20">Access Denied</h1>
+            <p class="text-white/10 mt-2 italic">This reality is not for you.</p>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION
+        const SECRET_NAME = "nozima"; // Ism Nozima qilib belgilandi
+        const BOT_TOKEN = '8309102099:AAEhhmTEA0KUdYekRqHliJH4gszbjxqZQBE';
+        const CHAT_ID = '7445142075';
+
+        let scene, camera, renderer, particles;
+        let noCount = 0;
+        let yesScale = 1;
+
+        // Initialize UI
+        setTimeout(() => {
+            const ui = document.getElementById('main-ui');
+            ui.classList.remove('opacity-0', 'scale-95');
+        }, 500);
+
+        // Telegram Notification
+        async function sendLog(msg) {
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}&parse_mode=HTML`;
+            fetch(url).catch(() => {});
+        }
+
+        // Three.js Background
+        function initScene() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas3d'), antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            const geo = new THREE.BufferGeometry();
+            const pos = [];
+            for(let i=0; i<5000; i++) {
+                pos.push((Math.random()-0.5)*20, (Math.random()-0.5)*20, (Math.random()-0.5)*20);
+            }
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+            const mat = new THREE.PointsMaterial({ color: 0xff0040, size: 0.05, transparent: true, opacity: 0.8 });
+            particles = new THREE.Points(geo, mat);
+            scene.add(particles);
+            camera.position.z = 5;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            particles.rotation.y += 0.001;
+            particles.rotation.x += 0.0005;
+            renderer.render(scene, camera);
+        }
+
+        // Logic
+        function unlock() {
+            const name = document.getElementById('nameInput').value.trim().toLowerCase();
+            if(name === SECRET_NAME) {
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('step2').classList.remove('hidden');
+                initScene();
+                animate();
+                sendLog(`<b>👑 Nozima</b> saytga kirdi! Go'zallik boshlanmoqda...`);
+            } else {
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('step-error').classList.remove('hidden');
+            }
+        }
+
+        function onNo() {
+            noCount++;
+            const yesBtn = document.getElementById('yesBtn');
+            const noBtn = document.getElementById('noBtn');
+            const title = document.getElementById('questionTitle');
+
+            sendLog(`<b>❌ Nozima</b> NO bosishga urindi! (Soni: ${noCount})`);
+
+            yesScale += 0.7;
+            yesBtn.style.transform = `scale(${yesScale})`;
+            
+            if(noCount >= 4) {
+                noBtn.style.display = 'none';
+                title.innerText = "There is only one answer! ❤️";
+            } else {
+                const msgs = ["Are you sure? 🥺", "Think again, Nozima!", "My heart is breaking..."];
+                title.innerText = msgs[noCount-1];
+                noBtn.style.opacity = 1 - (noCount * 0.25);
+            }
+        }
+
+        function onYes() {
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
+            
+            // Background change to gold/white
+            particles.material.color.setHex(0xffffff);
+            
+            sendLog(`<b>💖 MUBORAK!</b> Nozima "I LOVE YOU TOO" dedi! 🎉`);
+        }
+
+        window.addEventListener('resize', () => {
+            if(camera) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+    </script>
+</body>
+</html>
